@@ -9,7 +9,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { mergeStatic, MAT, initMaterials, stylize, miniaturize, miniOf, upgradePlane, upgradeTrain, upgradeLock, makeDome, makeLock, makeIcePlant, makeCondenser, makeCrag, makeConifer, makeMTB, makePlane, buildTrack, supportsFor, makeTrain, placeTrain } from './models.js?v=20261118n';
+import { mergeStatic, MAT, initMaterials, stylize, miniaturize, miniOf, upgradePlane, upgradeTrain, upgradeLock, makeDome, makeLock, makeIcePlant, makeCondenser, makeCrag, makeConifer, makeMTB, makePlane, buildTrack, supportsFor, makeTrain, placeTrain } from './models.js?v=20261118o';
 
 // ---------- math ----------
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -31,14 +31,16 @@ setLoad(0.1);
 // ---------- renderer / scene ----------
 const canvas = document.getElementById('gl');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-const DPR = Math.min(devicePixelRatio, 1.75);
+// phones: lighter start (lower pixel ratio, 2x MSAA, smaller shadows, half-res bloom, no ambient occlusion)
+const PHONE = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 820;
+const DPR = Math.min(devicePixelRatio, PHONE ? 1.3 : 1.75);
 renderer.setPixelRatio(DPR);
 renderer.setSize(innerWidth, innerHeight, false);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.25;
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = PHONE ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
 renderer.setClearColor(BG, 1);
 
 const scene = new THREE.Scene();
@@ -77,18 +79,18 @@ const tex = (url, rep, srgb) => { if (!OUTDOOR) return null; const t = texL.load
 const camera = new THREE.PerspectiveCamera(32, innerWidth / innerHeight, 0.1, 800);
 camera.position.set(0, 0, 12);
 // post: MSAA half-float target -> subtle bloom on lights and hot specular -> tone map + sRGB
-const rt = new THREE.WebGLRenderTarget(innerWidth * DPR, innerHeight * DPR, { type: THREE.HalfFloatType, samples: 4 });
+const rt = new THREE.WebGLRenderTarget(innerWidth * DPR, innerHeight * DPR, { type: THREE.HalfFloatType, samples: PHONE ? 2 : 4 });
 const composer = new EffectComposer(renderer, rt);
 composer.setPixelRatio(DPR); composer.setSize(innerWidth, innerHeight);
 composer.addPass(new RenderPass(scene, camera));
 const gtao = new GTAOPass(scene, camera, innerWidth / 2, innerHeight / 2); gtao.blendIntensity = 0.85; composer.addPass(gtao);
-const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.3, 0.35, 2.6);
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight).multiplyScalar(PHONE ? 0.5 : 1), 0.3, 0.35, 2.6);
 composer.addPass(bloom);
 composer.addPass(new OutputPass());
 
 const key = new THREE.DirectionalLight(0xfff0de, 2.0);
 key.position.set(6, 9, 8); key.castShadow = true;
-key.shadow.mapSize.set(2048, 2048);
+key.shadow.mapSize.set(PHONE ? 1024 : 2048, PHONE ? 1024 : 2048);
 Object.assign(key.shadow.camera, { left: -22, right: 22, top: 22, bottom: -22, near: 1, far: 90 });
 key.shadow.bias = -0.0004; key.shadow.normalBias = 0.03; key.shadow.radius = 4;
 scene.add(key, key.target);
@@ -796,17 +798,23 @@ const contactEl = document.getElementById('contact');
 function metrics() { chapters.forEach((c) => { c.top = c.el.offsetTop; c.len = c.el.offsetHeight; }); }
 const prog = (c) => (S.scroll - c.top) / Math.max(1, c.len - S.h);
 
-const QUAL = { lvl: 0, ema: 1 / 60, slow: 0, fast: 0, upAt: -99, noUp: false };
+const QUAL = { lvl: PHONE ? 1 : 0, ema: 1 / 60, slow: 0, fast: 0, upAt: -99, noUp: false };
 function applyQuality() {
   const pr = QUAL.lvl >= 2 ? 1 : DPR;
   if (renderer.getPixelRatio() !== pr) { renderer.setPixelRatio(pr); composer.setPixelRatio(pr); onResize(); }
   document.documentElement.dataset.quality = QUAL.lvl;
 }
 function onResize() {
-  renderer.setSize(innerWidth, innerHeight, false); composer.setSize(innerWidth, innerHeight); gtao.setSize(innerWidth / 2, innerHeight / 2); bloom.resolution.set(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight, false); composer.setSize(innerWidth, innerHeight); gtao.setSize(innerWidth / 2, innerHeight / 2); bloom.resolution.set(innerWidth, innerHeight).multiplyScalar(PHONE ? 0.5 : 1); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
   computeVis(); layoutHero(); metrics(); buildPageCoaster(); measureSafe();
 }
-addEventListener('resize', onResize);
+// phones fire resize every time the address bar slides in or out while scrolling; rebuilding the render targets then
+// stalls the scroll. Ignore height-only changes there (the fixed canvas just stretches a few pixels); rotate still resizes.
+let lastW = innerWidth, lastH = innerHeight;
+addEventListener('resize', () => {
+  if (PHONE && innerWidth === lastW && Math.abs(innerHeight - lastH) < 0.25 * lastH) return;
+  lastW = innerWidth; lastH = innerHeight; onResize();
+});
 // left edge part labels may reach: the text column's right edge on desktop layouts (labels never sit on the copy), else the screen edge
 function measureSafe() { const pn = document.querySelector('.panel'); S.safeL = (!S.mobile && pn) ? pn.offsetLeft + pn.offsetWidth + 16 : 16; }
 measureSafe();
@@ -862,7 +870,7 @@ function frame(now) {
   const t0 = performance.now();
   const gl = new GLTFLoader(); const draco = new DRACOLoader(); draco.setDecoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/gltf/'); gl.setDRACOLoader(draco);
   let got = 0; const bump = () => setLoad(0.25 + 0.6 * (++got / 6));   // smooth progress: letters + lighting + four models
-  const ASSET_V = '20261118n'; // bump with the ?v= in index.html when models change
+  const ASSET_V = '20261118o'; // bump with the ?v= in index.html when models change
   const loadGLB = (u) => new Promise((res) => gl.load(u + '?v=' + ASSET_V, (g) => { bump(); res(g.scene); }, undefined, (e) => { console.warn('GLB failed', u, e); bump(); res(null); }));
   const [, , g3, cessna, rbCar, lockPro] = await Promise.all([buildLetters().then(bump), hdrReady.then(bump), Promise.resolve(null),loadGLB('assets/cessna152.glb'), loadGLB('assets/railblazer_car.glb'), loadGLB('assets/level_lock_pro.glb')]); setLoad(0.9);
   if (lockPro) { upgradeLock(cLock, lockPro); const hl = upgradeLock(hLock, lockPro); if (hl.faceplate) hl.faceplate.visible = false; }
