@@ -189,3 +189,6 @@ a{color:inherit;text-decoration:none}
 .no-3d .hero{background:#000 url(../assets/og.jpg?v=2) center 42%/min(1200px,100vw) auto no-repeat}
 .no-3d .hero-tag{visibility:hidden}
 section[tabindex="-1"]:focus{outline:none}
+
+/* phones: blurring the live 3D behind each label is costly there; a more opaque chip looks the same */
+@media (pointer:coarse){.lbl span{backdrop-filter:none;background:rgba(10,11,12,.86)}}
