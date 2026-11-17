@@ -9,7 +9,8 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { mergeStatic, MAT, initMaterials, stylize, miniaturize, miniOf, upgradePlane, upgradeTrain, upgradeLock, makeDome, makeLock, makeIcePlant, makeCondenser, makeCrag, makeConifer, makeMTB, makePlane, buildTrack, supportsFor, makeTrain, placeTrain } from './models.js?v=20261118p';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { mergeStatic, MAT, initMaterials, stylize, miniaturize, miniOf, upgradePlane, upgradeTrain, upgradeLock, makeDome, makeLock, makeIcePlant, makeCondenser, makeCrag, makeConifer, makeMTB, makePlane, buildTrack, supportsFor, makeTrain, placeTrain } from './models.js?v=20261118q';
 
 // ---------- math ----------
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -33,7 +34,7 @@ const canvas = document.getElementById('gl');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
 // phones: lighter start (lower pixel ratio, 2x MSAA, smaller shadows, half-res bloom, no ambient occlusion)
 const PHONE = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 820;
-const DPR = Math.min(devicePixelRatio, PHONE ? 1.3 : 1.5);
+const DPR = Math.min(devicePixelRatio, PHONE ? 2 : 1.75);
 renderer.setPixelRatio(DPR);
 renderer.setSize(innerWidth, innerHeight, false);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -79,14 +80,30 @@ const tex = (url, rep, srgb) => { if (!OUTDOOR) return null; const t = texL.load
 const camera = new THREE.PerspectiveCamera(32, innerWidth / innerHeight, 0.1, 800);
 camera.position.set(0, 0, 12);
 // post: MSAA half-float target -> subtle bloom on lights and hot specular -> tone map + sRGB
-const rt = new THREE.WebGLRenderTarget(innerWidth * DPR, innerHeight * DPR, { type: THREE.HalfFloatType, samples: PHONE ? 2 : 4 });
+const rt = new THREE.WebGLRenderTarget(innerWidth * DPR, innerHeight * DPR, { type: THREE.HalfFloatType, samples: 4 });
 const composer = new EffectComposer(renderer, rt);
 composer.setPixelRatio(DPR); composer.setSize(innerWidth, innerHeight);
 composer.addPass(new RenderPass(scene, camera));
 const gtao = new GTAOPass(scene, camera, innerWidth / 2, innerHeight / 2); gtao.blendIntensity = 0.85; composer.addPass(gtao);
-const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight).multiplyScalar(0.5), 0.3, 0.35, 2.6);
+// measured on the GPU: AO at 16+16 samples cost 4ms a frame; 8+8 looks the same after its denoise
+gtao.updateGtaoMaterial({ samples: 8 }); gtao.updatePdMaterial({ samples: 8, rings: 2 });
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.3, 0.35, 2.6);
+// three's bloom ignores its resolution on resize and runs at full size (8ms a frame, the single biggest cost).
+// The glow is a wide blur, so a quarter-size bloom looks the same at a fraction of the cost.
+{ const sz = bloom.setSize.bind(bloom); bloom.setSize = (w, h) => sz(Math.max(1, w / 2), Math.max(1, h / 2)); }
 composer.addPass(bloom);
 composer.addPass(new OutputPass());
+// film grain, drawn in the final pass. It used to be a blended page layer over the canvas, which made the browser
+// re-blend the whole screen every frame (measured: about a third of all slow frames). Here it is nearly free.
+const grain = new ShaderPass({
+  uniforms: { tDiffuse: { value: null }, uSeed: { value: 0 } },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float uSeed; varying vec2 vUv;
+    float h(vec2 p){ p = fract(p * vec2(443.897, 441.423) + uSeed); p += dot(p, p.yx + 19.19); return fract((p.x + p.y) * p.x); }
+    void main(){ vec4 c = texture2D(tDiffuse, vUv); float n = h(floor(gl_FragCoord.xy / 1.5)) - 0.5;
+      c.rgb += n * mix(0.05, 0.025, dot(c.rgb, vec3(0.333))); gl_FragColor = c; }`,
+});
+composer.addPass(grain);
 
 const key = new THREE.DirectionalLight(0xfff0de, 2.0);
 key.position.set(6, 9, 8); key.castShadow = true;
@@ -800,12 +817,12 @@ const prog = (c) => (S.scroll - c.top) / Math.max(1, c.len - S.h);
 
 const QUAL = { lvl: PHONE ? 1 : 0, ema: 1 / 60, slow: 0, fast: 0, upAt: -99, noUp: false };
 function applyQuality() {
-  const pr = QUAL.lvl >= 2 ? 1 : DPR;
+  const pr = QUAL.lvl >= 2 ? Math.min(DPR, 1.35) : DPR;
   if (renderer.getPixelRatio() !== pr) { renderer.setPixelRatio(pr); composer.setPixelRatio(pr); onResize(); }
   document.documentElement.dataset.quality = QUAL.lvl;
 }
 function onResize() {
-  renderer.setSize(innerWidth, innerHeight, false); composer.setSize(innerWidth, innerHeight); gtao.setSize(innerWidth / 2, innerHeight / 2); bloom.resolution.set(innerWidth, innerHeight).multiplyScalar(0.5); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight, false); composer.setSize(innerWidth, innerHeight); gtao.setSize(innerWidth / 2, innerHeight / 2); bloom.resolution.set(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
   computeVis(); layoutHero(); metrics(); buildPageCoaster(); measureSafe();
 }
 // phones fire resize every time the address bar slides in or out while scrolling; rebuilding the render targets then
@@ -845,8 +862,8 @@ function frame(now) {
   // adaptive quality: if frames run slow (~<45fps) for a while, drop ambient occlusion, then render at 1x pixel
   // ratio; climb back once frames are comfortably fast again. Keeps scroll smooth on weaker laptops and phones.
   if (S.t > 4 && document.visibilityState === 'visible') QUAL.ema = QUAL.ema * 0.94 + dt * 0.06; // ignore load-time stutter
-  if (QUAL.ema > 1 / 50) { QUAL.slow += dt; QUAL.fast = 0; } else if (QUAL.ema < 1 / 57) { QUAL.fast += dt; QUAL.slow = 0; } else { QUAL.slow = QUAL.fast = 0; }
-  if (QUAL.slow > 1 && QUAL.lvl < 2) { if (S.t - QUAL.upAt < 10) QUAL.noUp = true; QUAL.lvl++; QUAL.slow = 0; applyQuality(); } // stepping up made it slow -> stay down
+  if (QUAL.ema > 1 / 45) { QUAL.slow += dt; QUAL.fast = 0; } else if (QUAL.ema < 1 / 57) { QUAL.fast += dt; QUAL.slow = 0; } else { QUAL.slow = QUAL.fast = 0; }
+  if (QUAL.slow > 1.5 && QUAL.lvl < 2) { if (S.t - QUAL.upAt < 10) QUAL.noUp = true; QUAL.lvl++; QUAL.slow = 0; applyQuality(); } // stepping up made it slow -> stay down
   if (QUAL.fast > 6 && QUAL.lvl > 0 && !QUAL.noUp) { QUAL.lvl--; QUAL.fast = 0; QUAL.upAt = S.t; applyQuality(); }
   const outdoor = !!cam; gtao.enabled = !outdoor && QUAL.lvl === 0;
   scene.environment = outdoor && ENV.night ? ENV.night : ENV.studio;
@@ -862,6 +879,7 @@ function frame(now) {
   railItems.forEach((li) => { const c = chapters.find((x) => x.id === li.dataset.for); li.classList.toggle('on', c && c.p > -0.1 && c.p < 1.05); });
   const blink = (S.t % 1.6) < 0.08 ? 6 : 0.15;
   
+  if (!REDUCED) grain.uniforms.uSeed.value = Math.floor(S.t * 5) * 0.137 % 1; // ~5 grain changes a second, like the old film steps
   composer.render();
   requestAnimationFrame(frame);
 }
@@ -870,7 +888,7 @@ function frame(now) {
   const t0 = performance.now();
   const gl = new GLTFLoader(); const draco = new DRACOLoader(); draco.setDecoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/gltf/'); gl.setDRACOLoader(draco);
   let got = 0; const bump = () => setLoad(0.25 + 0.6 * (++got / 6));   // smooth progress: letters + lighting + four models
-  const ASSET_V = '20261118p'; // bump with the ?v= in index.html when models change
+  const ASSET_V = '20261118q'; // bump with the ?v= in index.html when models change
   const loadGLB = (u) => new Promise((res) => gl.load(u + '?v=' + ASSET_V, (g) => { bump(); res(g.scene); }, undefined, (e) => { console.warn('GLB failed', u, e); bump(); res(null); }));
   const [, , g3, cessna, rbCar, lockPro] = await Promise.all([buildLetters().then(bump), hdrReady.then(bump), Promise.resolve(null),loadGLB('assets/cessna152.glb'), loadGLB('assets/railblazer_car.glb'), loadGLB('assets/level_lock_pro.glb')]); setLoad(0.9);
   if (lockPro) { upgradeLock(cLock, lockPro); const hl = upgradeLock(hLock, lockPro); if (hl.faceplate) hl.faceplate.visible = false; }
