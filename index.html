@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Banks Hayes</title>
+<meta name="description" content="Banks Hayes: hardware sourcing and supply chain. Verkada, Level Home, Arctic Glacier.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%230a0b0c%27/%3E%3Ctext x=%2716%27 y=%2724%27 font-family=%27Arial Narrow,Arial%27 font-weight=%27900%27 font-size=%2722%27 text-anchor=%27middle%27 fill=%27%23ff5b1f%27%3EB%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#0a0b0c">
+<meta property="og:title" content="Banks Hayes">
+<meta property="og:description" content="Hardware sourcing and supply chain. Verkada, Level Home, Arctic Glacier.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://sbankshayes.com/">
+<link rel="canonical" href="https://sbankshayes.com/">
+<meta name="twitter:card" content="summary_large_image">
+<meta property="og:image" content="https://sbankshayes.com/assets/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="BANKS in large letters with five small machines built into the letterforms">
+<meta name="twitter:image" content="https://sbankshayes.com/assets/og.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;1,400&family=Big+Shoulders+Display:wght@600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css?v=20261118j">
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+  "lenis": "https://unpkg.com/lenis@1.1.13/dist/lenis.mjs"
+} }
+</script>
+</head>
+<body>
+<canvas id="gl" aria-hidden="true"></canvas>
+<div id="labels" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<noscript><style>.loader{display:none}</style></noscript>
+<script>
+  // safety net: if WebGL or the 3D bundle fails, never leave visitors on the loader; show the static hero instead
+  (function () {
+    var ok = false; try { var c = document.createElement('canvas'); ok = !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl'))); } catch (e) {}
+    function fallback() { var l = document.getElementById('loader'); if (l && !l.classList.contains('done')) { l.classList.add('done'); document.documentElement.classList.add('no-3d'); document.body.classList.add('ready'); } }
+    if (!ok) document.addEventListener('DOMContentLoaded', fallback); else setTimeout(fallback, 25000);
+    window.addEventListener('error', function (e) { if (e && e.filename && /main\.js|models\.js|three/.test(e.filename)) setTimeout(fallback, 400); });
+  })();
+</script>
+<div class="loader" id="loader"><div class="loader-in"><span>BANKS HAYES</span><i><b id="loadbar"></b></i></div></div>
+
+<a class="skip" href="#verkada">Skip to work</a>
+<div class="nav-scrim" aria-hidden="true"></div>
+<header class="nav">
+  <a class="brand" href="#hero">Banks Hayes</a>
+  <nav class="nav-links">
+    
+    <a href="#verkada">Verkada</a>
+    <a href="#level">Level</a>
+    <a href="#arctic">Arctic Glacier</a>
+    <a href="#outside">Off the clock</a>
+  </nav>
+  <a class="nav-cta" href="https://www.linkedin.com/in/bankshayes" target="_blank" rel="noopener" aria-label="LinkedIn (opens in a new tab)"><span class="dot"></span>LinkedIn&nbsp;↗</a>
+</header>
+
+<aside class="rail" aria-hidden="true">
+  <ol>
+    <li data-for="verkada"><span>01</span></li>
+    <li data-for="level"><span>02</span></li>
+    <li data-for="arctic"><span>03</span></li>
+    <li data-for="outside"><span>04</span></li>
+  </ol>
+  <div class="rail-bar"><b id="railfill"></b></div>
+</aside>
+
+<main>
+  <!-- HERO -->
+  <section id="hero" class="hero">
+    <h1 class="sr-only">Banks Hayes: hardware sourcing and supply chain</h1>
+    <p class="hero-tag reveal">Hardware, sourced<br>down to the silicon.</p>
+    <div class="hero-meta reveal">
+      <div><small>Based</small><span>Palo Alto, CA</span></div>
+      <div><small>Studying</small><span>Supply Chain + Mech. Eng., Northeastern</span></div>
+      <div><small>Next</small><span>Verkada, Jan 2027 →</span></div>
+    </div>
+    <p class="hero-fig reveal">Fig. 01 · Five machines, one name</p>
+    <div class="scroll-cue reveal"><span>Scroll</span><i></i></div>
+  </section>
+
+  
+  <!-- VERKADA -->
+  <section id="verkada" class="ch" style="--len:7">
+    <div class="stick">
+      <article class="panel" data-range="0.0,0.25">
+        <header class="eyebrow"><span>01 / Verkada</span><span>San Mateo, CA</span></header>
+        <h2><span class="sr-only">Verkada: </span>Global Sourcing <br>Specialist</h2>
+        <p class="when"><i></i>Incoming Co-op · Jan 2027</p>
+        <p class="lede">Owning a product line, FATP to sub-tier.</p>
+        <ul class="bul">
+          <li><b>01</b>Direct sourcing across NPI and MP</li>
+          <li><b>02</b>BOM, MVA, Capex and Opex negotiation</li>
+          <li><b>03</b>Supplier qualification and audits</li>
+        </ul>
+      </article>
+      <article class="panel src" data-range="0.26,0.9">
+        <header class="eyebrow"><span>For example</span><span>CD63 dome</span></header>
+        <div class="cats">
+          <div class="cat" data-cat="0"><h3><b aria-hidden="true">A</b>Mechanical</h3><p>Housing · Dome · Gimbal</p></div>
+          <div class="cat" data-cat="1"><h3><b aria-hidden="true">B</b>Electromechanical</h3><p>Zoom lens · IR-cut filter</p></div>
+          <div class="cat" data-cat="2"><h3><b aria-hidden="true">C</b>PCBAs &amp; ICs</h3><p>SoC · Sensor · IR · PoE</p></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- LEVEL -->
+  <section id="level" class="ch" style="--len:7">
+    <div class="stick">
+      <article class="panel" data-range="0.0,0.25">
+        <header class="eyebrow"><span>02 / Level Home · ASSA ABLOY</span><span>Redwood City, CA</span></header>
+        <h2><span class="sr-only">Level: </span>Supply Chain <br>Analyst</h2>
+        <p class="when"><i></i>Co-op · Jan to Jun 2026</p>
+        <p class="lede">Flagship smart lock, P4 through EVT.</p>
+        <ul class="bul">
+          <li><b>01</b>Cross-functional NPI on an accelerated clock</li>
+          <li><b>02</b>RFQs across APAC suppliers and the full BOM</li>
+          <li><b>03</b>Tooling, timelines and tariff audits</li>
+        </ul>
+      </article>
+      <article class="panel src" data-range="0.26,0.9">
+        <header class="eyebrow"><span>What I sourced</span><span>Level Lock Pro</span></header>
+        <div class="cats">
+          <div class="cat" data-cat="0"><h3><b aria-hidden="true">A</b>Mechanical</h3><p>Die-cast · Cylinder · Strike</p></div>
+          <div class="cat" data-cat="1"><h3><b aria-hidden="true">B</b>Electromechanical</h3><p>Motor · Gears · Battery</p></div>
+          <div class="cat" data-cat="2"><h3><b aria-hidden="true">C</b>PCBAs &amp; ICs</h3><p>Main board · Radios</p></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ARCTIC GLACIER -->
+  <section id="arctic" class="ch" style="--len:7">
+    <div class="stick">
+      <article class="panel" data-range="0.0,0.25">
+        <header class="eyebrow"><span>03 / Arctic Glacier Premium Ice</span><span>Fremont, CA</span></header>
+        <h2><span class="sr-only">Arctic Glacier: </span>Plant Engineering <br>Intern</h2>
+        <p class="when"><i></i>Summer 2025</p>
+        <p class="lede">Keeping an ice plant cold and moving.</p>
+        <ul class="bul">
+          <li><b>01</b>Cloud inventory system for pallets</li>
+          <li><b>02</b>Demand models and bagging-line improvements</li>
+          <li><b>03</b>Controls install and NH3 compliance support</li>
+        </ul>
+      </article>
+      <article class="panel src" data-range="0.26,0.9">
+        <header class="eyebrow"><span>What I worked on</span><span>Ice plant</span></header>
+        <div class="cats">
+          <div class="cat" data-cat="0"><h3><b aria-hidden="true">A</b>Refrigeration</h3><p>Condensers · Evaporators · NH3</p></div>
+          <div class="cat" data-cat="1"><h3><b aria-hidden="true">B</b>Ice &amp; bagging</h3><p>Ice bin room · Bagging lines</p></div>
+          <div class="cat" data-cat="2"><h3><b aria-hidden="true">C</b>Cold storage</h3><p>Warehouse · Unit coolers · Controls</p></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- OFF THE CLOCK -->
+  <section id="outside" class="ch" style="--len:6">
+    <div class="stick">
+      <article class="panel" data-range="0.0,0.92">
+        <header class="eyebrow"><span>04 / Off the clock</span><span>Bay Area</span></header>
+        <h2>Trees, trails, <br>rock, rails, wings</h2>
+        <p class="lede" style="margin-top:24px">What I do when I'm not sourcing.</p>
+        <ul class="bul">
+          <li><b>01</b>Love nature</li>
+          <li><b>02</b>Worked at a theme park for years</li>
+          <li><b>03</b>Spent time teaching the next generation about planes</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact" class="contact">
+    <div class="drift" aria-hidden="true"><svg class="d1" viewBox="0 0 120 60"><path d="M18 16 H102 V25 H18 Z"/><path d="M28 25 A32 32 0 0 0 92 25"/><circle cx="60" cy="40" r="7"/></svg><svg class="d2" viewBox="0 0 120 60"><circle cx="60" cy="30" r="24"/><circle cx="60" cy="30" r="12"/><path d="M60 24 V36"/></svg><svg class="d3" viewBox="0 0 120 60"><path d="M8 33 L88 29 Q104 29 107 33 Q104 37 88 37 L28 39 Z"/><path d="M36 25 H90 M18 33 L11 18 H20 L28 32 M62 25 L58 37"/><circle cx="110" cy="33" r="1.5"/></svg><svg class="d4" viewBox="0 0 120 60"><path d="M4 47 Q60 37 116 47"/><path d="M22 43 V28 H58 V41 M30 28 V16 M58 28 L68 20 M66 40 V27 H100 V43 M74 27 V15"/></svg><svg class="d5" viewBox="0 0 120 60"><path d="M26 22 H94 V50 H26 Z M26 30 H94 M26 38 H94 M26 46 H94"/><path d="M44 14 H76 V22 H44 Z"/><path d="M52 18 H68"/></svg></div>
+    <p class="eyebrow"><span>05 / Contact</span><span>Boston · Bay Area</span></p>
+    <h2>Let's build <br><em>hardware.</em></h2>
+    <a class="btn" href="https://www.linkedin.com/in/bankshayes" target="_blank" rel="noopener" aria-label="Message me on LinkedIn (opens in a new tab)">Message me on LinkedIn <span aria-hidden="true">↗</span></a>
+    <footer>
+      <span>Samuel Banks Hayes</span>
+      <span>Northeastern University · D'Amore-McKim</span>
+      <span>Models are illustrative, built in code.</span>
+    </footer>
+  </section>
+</main>
+
+<script type="module" src="js/main.js?v=20261118j"></script>
+</body>
+</html>
