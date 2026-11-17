@@ -9,7 +9,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { mergeStatic, MAT, initMaterials, stylize, miniaturize, miniOf, upgradePlane, upgradeTrain, upgradeLock, makeDome, makeLock, makeIcePlant, makeCondenser, makeCrag, makeConifer, makeMTB, makePlane, buildTrack, supportsFor, makeTrain, placeTrain } from './models.js?v=20261118o';
+import { mergeStatic, MAT, initMaterials, stylize, miniaturize, miniOf, upgradePlane, upgradeTrain, upgradeLock, makeDome, makeLock, makeIcePlant, makeCondenser, makeCrag, makeConifer, makeMTB, makePlane, buildTrack, supportsFor, makeTrain, placeTrain } from './models.js?v=20261118p';
 
 // ---------- math ----------
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -33,7 +33,7 @@ const canvas = document.getElementById('gl');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
 // phones: lighter start (lower pixel ratio, 2x MSAA, smaller shadows, half-res bloom, no ambient occlusion)
 const PHONE = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 820;
-const DPR = Math.min(devicePixelRatio, PHONE ? 1.3 : 1.75);
+const DPR = Math.min(devicePixelRatio, PHONE ? 1.3 : 1.5);
 renderer.setPixelRatio(DPR);
 renderer.setSize(innerWidth, innerHeight, false);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -84,7 +84,7 @@ const composer = new EffectComposer(renderer, rt);
 composer.setPixelRatio(DPR); composer.setSize(innerWidth, innerHeight);
 composer.addPass(new RenderPass(scene, camera));
 const gtao = new GTAOPass(scene, camera, innerWidth / 2, innerHeight / 2); gtao.blendIntensity = 0.85; composer.addPass(gtao);
-const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight).multiplyScalar(PHONE ? 0.5 : 1), 0.3, 0.35, 2.6);
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight).multiplyScalar(0.5), 0.3, 0.35, 2.6);
 composer.addPass(bloom);
 composer.addPass(new OutputPass());
 
@@ -805,7 +805,7 @@ function applyQuality() {
   document.documentElement.dataset.quality = QUAL.lvl;
 }
 function onResize() {
-  renderer.setSize(innerWidth, innerHeight, false); composer.setSize(innerWidth, innerHeight); gtao.setSize(innerWidth / 2, innerHeight / 2); bloom.resolution.set(innerWidth, innerHeight).multiplyScalar(PHONE ? 0.5 : 1); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight, false); composer.setSize(innerWidth, innerHeight); gtao.setSize(innerWidth / 2, innerHeight / 2); bloom.resolution.set(innerWidth, innerHeight).multiplyScalar(0.5); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
   computeVis(); layoutHero(); metrics(); buildPageCoaster(); measureSafe();
 }
 // phones fire resize every time the address bar slides in or out while scrolling; rebuilding the render targets then
@@ -845,8 +845,8 @@ function frame(now) {
   // adaptive quality: if frames run slow (~<45fps) for a while, drop ambient occlusion, then render at 1x pixel
   // ratio; climb back once frames are comfortably fast again. Keeps scroll smooth on weaker laptops and phones.
   if (S.t > 4 && document.visibilityState === 'visible') QUAL.ema = QUAL.ema * 0.94 + dt * 0.06; // ignore load-time stutter
-  if (QUAL.ema > 1 / 45) { QUAL.slow += dt; QUAL.fast = 0; } else if (QUAL.ema < 1 / 57) { QUAL.fast += dt; QUAL.slow = 0; } else { QUAL.slow = QUAL.fast = 0; }
-  if (QUAL.slow > 1.5 && QUAL.lvl < 2) { if (S.t - QUAL.upAt < 10) QUAL.noUp = true; QUAL.lvl++; QUAL.slow = 0; applyQuality(); } // stepping up made it slow -> stay down
+  if (QUAL.ema > 1 / 50) { QUAL.slow += dt; QUAL.fast = 0; } else if (QUAL.ema < 1 / 57) { QUAL.fast += dt; QUAL.slow = 0; } else { QUAL.slow = QUAL.fast = 0; }
+  if (QUAL.slow > 1 && QUAL.lvl < 2) { if (S.t - QUAL.upAt < 10) QUAL.noUp = true; QUAL.lvl++; QUAL.slow = 0; applyQuality(); } // stepping up made it slow -> stay down
   if (QUAL.fast > 6 && QUAL.lvl > 0 && !QUAL.noUp) { QUAL.lvl--; QUAL.fast = 0; QUAL.upAt = S.t; applyQuality(); }
   const outdoor = !!cam; gtao.enabled = !outdoor && QUAL.lvl === 0;
   scene.environment = outdoor && ENV.night ? ENV.night : ENV.studio;
@@ -870,7 +870,7 @@ function frame(now) {
   const t0 = performance.now();
   const gl = new GLTFLoader(); const draco = new DRACOLoader(); draco.setDecoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/gltf/'); gl.setDRACOLoader(draco);
   let got = 0; const bump = () => setLoad(0.25 + 0.6 * (++got / 6));   // smooth progress: letters + lighting + four models
-  const ASSET_V = '20261118o'; // bump with the ?v= in index.html when models change
+  const ASSET_V = '20261118p'; // bump with the ?v= in index.html when models change
   const loadGLB = (u) => new Promise((res) => gl.load(u + '?v=' + ASSET_V, (g) => { bump(); res(g.scene); }, undefined, (e) => { console.warn('GLB failed', u, e); bump(); res(null); }));
   const [, , g3, cessna, rbCar, lockPro] = await Promise.all([buildLetters().then(bump), hdrReady.then(bump), Promise.resolve(null),loadGLB('assets/cessna152.glb'), loadGLB('assets/railblazer_car.glb'), loadGLB('assets/level_lock_pro.glb')]); setLoad(0.9);
   if (lockPro) { upgradeLock(cLock, lockPro); const hl = upgradeLock(hLock, lockPro); if (hl.faceplate) hl.faceplate.visible = false; }
