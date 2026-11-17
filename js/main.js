@@ -9,7 +9,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { mergeStatic, MAT, initMaterials, stylize, miniaturize, miniOf, upgradePlane, upgradeTrain, upgradeLock, makeDome, makeLock, makeIcePlant, makeCondenser, makeCrag, makeConifer, makeMTB, makePlane, buildTrack, supportsFor, makeTrain, placeTrain } from './models.js?v=20261118j';
+import { mergeStatic, MAT, initMaterials, stylize, miniaturize, miniOf, upgradePlane, upgradeTrain, upgradeLock, makeDome, makeLock, makeIcePlant, makeCondenser, makeCrag, makeConifer, makeMTB, makePlane, buildTrack, supportsFor, makeTrain, placeTrain } from './models.js?v=20261118n';
 
 // ---------- math ----------
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -238,8 +238,8 @@ function layoutHero() {
   const F = letters.F, P = (n) => [n[0] * H, yc + n[1] * H];
   // dome: ceiling-mounted under the A's crossbar, hanging inside the counter
   const [ax, ay] = P(F.A.ceil); const ds = Math.min((F.A.cw * H * 1.25) / 2.52, (F.A.ch * H * 0.85) / 1.72);
-  // lock: installed in the N's left stem; bolt throws across the counter toward the diagonal
-  const [nx, ny] = P(F.N.stem); const ls = (F.N.sw * H * 1.02) / 1.43; const D = 0.55;
+  // lock: mounted on the face of the N's left stem (back plate flush, nothing cut by the letter); bolt throws toward the diagonal
+  const [nx, ny] = P(F.N.stem); const ls = (F.N.sw * H * 1.02) / 1.43; const D = -0.53;
   const stemHalfL = (F.N.sw * H * 0.5) / ls, gapL = ((F.N.diag - F.N.edge) * H) / ls;
   hero.lockBolt = { base: stemHalfL * 0.92 - 0.525, throw: gapL * 0.9 };
   
@@ -862,7 +862,7 @@ function frame(now) {
   const t0 = performance.now();
   const gl = new GLTFLoader(); const draco = new DRACOLoader(); draco.setDecoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/gltf/'); gl.setDRACOLoader(draco);
   let got = 0; const bump = () => setLoad(0.25 + 0.6 * (++got / 6));   // smooth progress: letters + lighting + four models
-  const ASSET_V = '20261118j'; // bump with the ?v= in index.html when models change
+  const ASSET_V = '20261118n'; // bump with the ?v= in index.html when models change
   const loadGLB = (u) => new Promise((res) => gl.load(u + '?v=' + ASSET_V, (g) => { bump(); res(g.scene); }, undefined, (e) => { console.warn('GLB failed', u, e); bump(); res(null); }));
   const [, , g3, cessna, rbCar, lockPro] = await Promise.all([buildLetters().then(bump), hdrReady.then(bump), Promise.resolve(null),loadGLB('assets/cessna152.glb'), loadGLB('assets/railblazer_car.glb'), loadGLB('assets/level_lock_pro.glb')]); setLoad(0.9);
   if (lockPro) { upgradeLock(cLock, lockPro); const hl = upgradeLock(hLock, lockPro); if (hl.faceplate) hl.faceplate.visible = false; }
